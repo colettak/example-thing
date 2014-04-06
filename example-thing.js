@@ -1,5 +1,7 @@
 /*globals window, document, $, jQuery, _, Backbone */
 (function ($, _, Backbone) {
+
+
 	"use strict";
 	var media = wp.media,
 
@@ -20,36 +22,10 @@
 		}
 	}),
 
-	ThingTooController = media.controller.State.extend({
-		defaults: {
-			id: 'thing-too',
-			title: 'Thing Too!',
-			router: false,
-			priority: 60,
-			toolbar: 'thing-too',
-			content: 'thing-too',
-			menu: 'thing-details'
-		},
-
-		initialize: function( options ) {
-			this.thing = options.thing;
-			media.controller.State.prototype.initialize.apply( this, arguments );
-		}
-	}),
 
 	ThingDetailsView = media.view.Settings.AttachmentDisplay.extend({
 		className: 'thing-details',
 		template:  media.template( 'thing-details' ),
-		prepare: function() {
-			return _.defaults( {
-				model: this.model.toJSON()
-			}, this.options );
-		}
-	}),
-
-	ThingTooView = media.view.Settings.AttachmentDisplay.extend({
-		className: 'thing-too',
-		template:  media.template( 'thing-too' ),
 		prepare: function() {
 			return _.defaults( {
 				model: this.model.toJSON()
@@ -77,10 +53,8 @@
 
 			this.on( 'menu:create:thing-details', this.createMenu, this );
 			this.on( 'content:render:thing-details', this.contentDetailsRender, this );
-			this.on( 'content:render:thing-too', this.contentTooRender, this );
 			this.on( 'menu:render:thing-details', this.menuRender, this );
 			this.on( 'toolbar:render:thing-details', this.toolbarRender, this );
-			this.on( 'toolbar:render:thing-too', this.toolbarTooRender, this );
 		},
 
 		contentDetailsRender: function() {
@@ -93,15 +67,7 @@
 			this.content.set( view );
 		},
 
-		contentTooRender: function() {
-			var view = new ThingTooView({
-				controller: this,
-				model: this.thing,
-				attachment: this.thing.attachment
-			}).render();
-
-			this.content.set( view );
-		},
+		
 
 		menuRender: function( view ) {
 			var lastState = this.lastState(),
@@ -147,24 +113,6 @@
 			}) );
 		},
 
-		toolbarTooRender: function() {
-			this.toolbar.set( new media.view.Toolbar({
-				controller: this,
-				items: {
-					button: {
-						style:    'primary',
-						text:     'Update Thing Too!',
-						priority: 80,
-						click:    function() {
-							var controller = this.controller;
-							controller.state().trigger( 'thing-too', controller.thing.toJSON() );
-							controller.setState( controller.options.state );
-							controller.reset();
-						}
-					}
-				}
-			}) );
-		},
 
 		createStates: function() {
 			this.states.add([
@@ -172,13 +120,13 @@
 					thing: this.thing
 				} ),
 
-				new ThingTooController( {
-					thing: this.thing
-				} )
+			
 			]);
 		}
 	}),
 
+	
+	/*Create a 'thing' object to pass to the mce view*/
 	thing = {
 		coerce : media.coerce,
 
@@ -219,7 +167,7 @@
 			});
 		}
 	},
-
+    /* a representation of the 'thing' in MCE. uses the thing object above to create the html */
 	thingMce = {
 		toView:  function( content ) {
 			var match = wp.shortcode.next( 'thing', content );
@@ -264,6 +212,42 @@
 			frame.open();
 		}
 	};
-	wp.mce.views.register( 'thing', thingMce );
+	
+	wp.mce.views.register( 'thing', thingMce );	
+	
+	
+	
+	
+	
+	tinymce.PluginManager.add( 'fb_test', function( editor, url ) {
+
+        // Add a button that opens a window
+        editor.addButton( 'fb_test_button_key', {
+
+            text: 'Thing',
+            icon: false,
+            onclick: function() {
+                // Open window
+                editor.windowManager.open( {
+                    title: 'Example plugin',
+                    body: [{
+                        type: 'textbox',
+                        name: 'title',
+                        label: 'Title'
+                    }],
+                    onsubmit: function( e ) {
+                        // Insert content when the window form is submitted
+                        editor.insertContent( '[thing] ' + e.data.title );
+                    }
+
+                } );
+            }
+
+        } );
+
+    } );
+
+	
+	
 
 }(jQuery, _, Backbone));
